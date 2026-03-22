@@ -33,7 +33,7 @@ function CheckmarkIcon({ color = '#CF9D7B' }) {
 const words = ['Close', 'the', 'Gap.', 'Own', 'the', 'Role.']
 
 const featureRow = [
-  { label: 'Gemini AI Engine', detail: 'Gemini (Google)' },
+  { label: 'AWS Bedrock AI', detail: 'Claude 3 Haiku (Anthropic)' },
   { label: 'Graph-based Pathing', detail: 'Kahn topological sort' },
   { label: '50+ Course Catalog', detail: 'All domains covered' },
   { label: 'Score-Gated Interviews', detail: '12 questions × 9 dimensions' },
@@ -88,7 +88,7 @@ export default function Landing() {
         >
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#CF9D7B', display: 'inline-block', boxShadow: '0 0 8px rgba(207,157,123,0.6)' }} />
           <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10.5, color: 'rgba(207,157,123,0.65)', letterSpacing: '1px', textTransform: 'uppercase' }}>
-            Powered by Gemini · AI Onboarding Intelligence
+            Powered by AWS Bedrock · AI Onboarding Intelligence
           </span>
         </motion.div>
 
@@ -194,7 +194,7 @@ export default function Landing() {
           </p>
           <div style={{ height: 1, background: 'linear-gradient(90deg,transparent,rgba(207,157,123,0.14),transparent)', marginBottom: 18 }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
-            {['Personalized Skill Gap Analysis', 'Day-by-Day Learning Roadmap', 'AI Chat Coach (Gemini)', 'Mock Technical Interview (90%+)'].map(f => (
+            {['Personalized Skill Gap Analysis', 'Day-by-Day Learning Roadmap', 'AI Chat Coach (Claude 3 Haiku)', 'Mock Technical Interview (90%+)'].map(f => (
               <div key={f} style={{ fontSize: 12.5, color: 'rgba(207,157,123,0.58)', display: 'flex', alignItems: 'center', gap: 9, fontFamily: 'DM Sans, sans-serif' }}>
                 <CheckmarkIcon color="#CF9D7B" /> {f}
               </div>
