@@ -80,7 +80,6 @@ function CreateRoleForm({ onCreated }) {
   const [jdText, setJdText] = useState('')
   const [jdFile, setJdFile] = useState(null)
   const [deadline, setDeadline] = useState('')
-  const [dailyHours, setDailyHours] = useState('2.0')
   const [loading, setLoading] = useState(false)
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -103,7 +102,6 @@ function CreateRoleForm({ onCreated }) {
       const form = new FormData()
       form.append('role_title', roleTitle)
       form.append('company_deadline', deadline)
-      form.append('daily_hours', dailyHours)
       if (jdFile) form.append('jd_file', jdFile)
       else form.append('jd_text', jdText)
       const res = await axios.post(`${API}/api/hr/create-role`, form)
@@ -149,16 +147,10 @@ function CreateRoleForm({ onCreated }) {
           )}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          <div>
+        <div>
             <label style={{ fontSize: 11, color: 'rgba(207,157,123,0.5)', fontFamily: 'JetBrains Mono, monospace', display: 'block', marginBottom: 7, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Training Deadline</label>
             <input type="date" className="autumn-input" value={deadline} min={minDateStr} onChange={e => setDeadline(e.target.value)} />
           </div>
-          <div>
-            <label style={{ fontSize: 11, color: 'rgba(207,157,123,0.5)', fontFamily: 'JetBrains Mono, monospace', display: 'block', marginBottom: 7, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Daily Hours Budget</label>
-            <input type="number" className="autumn-input" value={dailyHours} min="0.5" max="12" step="0.5" onChange={e => setDailyHours(e.target.value)} />
-          </div>
-        </div>
 
         <button className="btn-hr" onClick={handleSubmit} disabled={loading} style={{ marginTop: 4, fontSize: 14 }}>
           {loading ? <span className="warm-pulse">Creating Role…</span> : 'Create Role'}

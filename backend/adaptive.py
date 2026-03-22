@@ -13,19 +13,87 @@ logger = logging.getLogger(__name__)
 
 
 def find_relevant_modules(gap_skills: list[SkillGap], catalog: list[CourseModule]) -> list[CourseModule]:
-    """Find all modules relevant to the gap skills, including prerequisites recursively."""
-    needed_skills = {normalize_skill_name(g.skill_name) for g in gap_skills}
-    
-    # Build a module map for fast lookup
+    """
+    Find modules relevant to gap skills.
+    Uses multi-stage matching: exact → word-overlap → AI semantic fallback.
+    Ensures different candidates with different gaps get different roadmaps.
+    """
     module_map: dict[str, CourseModule] = {m.id: m for m in catalog}
-    
-    # First pass: find all modules that directly address gap skills
     relevant_ids: set[str] = set()
+
+    # Build needed skills set — use actual gap skill names
+    needed_normalized = {normalize_skill_name(g.skill_name) for g in gap_skills}
+    needed_original   = [g.skill_name for g in gap_skills]
+
+    # Stage 1: exact / alias match on skill_name
     for module in catalog:
-        if normalize_skill_name(module.skill_name) in needed_skills:
+        mod_norm = normalize_skill_name(module.skill_name)
+        if mod_norm in needed_normalized:
             relevant_ids.add(module.id)
-    
-    # Second pass: expand with prerequisites recursively
+
+    # Stage 2: word-overlap match (catches "machine learning" ↔ "ml engineering")
+    for module in catalog:
+        if module.id in relevant_ids:
+            continue
+        mod_words = set(normalize_skill_name(module.skill_name).split())
+        for ns in needed_normalized:
+            ns_words = set(ns.split())
+            if mod_words & ns_words:
+                overlap = len(mod_words & ns_words) / max(len(mod_words), len(ns_words))
+                if overlap >= 0.4:
+                    relevant_ids.add(module.id)
+                    break
+
+    # Stage 3: title/description keyword match
+    for module in catalog:
+        if module.id in relevant_ids:
+            continue
+        mod_title = normalize_skill_name(module.title)
+        for ns in needed_normalized:
+            ns_words = [w for w in ns.split() if len(w) > 3]
+            if any(w in mod_title for w in ns_words):
+                relevant_ids.add(module.id)
+                break
+
+    # Stage 4: AI semantic fallback for remaining unmatched gaps
+    unmatched_gaps = []
+    for gap in gap_skills:
+        gn = normalize_skill_name(gap.skill_name)
+        matched = any(
+            normalize_skill_name(catalog[i].skill_name) == gn or
+            gn in normalize_skill_name(catalog[i].title)
+            for i, mid in enumerate(relevant_ids)
+            if i < len(catalog)
+        )
+        if not matched:
+            unmatched_gaps.append(gap.skill_name)
+
+    if unmatched_gaps:
+        try:
+            from ai_client import call_gemini_json
+            catalog_summary = [{"id": m.id, "skill": m.skill_name, "title": m.title} for m in catalog]
+            system = (
+                "Match each skill gap to the most relevant course module IDs from the catalog. "
+                "Return ONLY a valid JSON object mapping skill names to lists of module IDs. "
+                "Match semantically — cloud platforms should match aws, gcp, azure modules. "
+                "Return at most 3 module IDs per skill. No markdown. No code fences."
+            )
+            user = (
+                "Skills to match: " + str(unmatched_gaps) + "\n\n"
+                "Catalog: " + str(catalog_summary)
+            )
+            result = call_gemini_json(system, user, max_tokens=2000)
+            if isinstance(result, dict):
+                valid_ids = {m.id for m in catalog}
+                for skill, mids in result.items():
+                    if isinstance(mids, list):
+                        for mid in mids:
+                            if mid in valid_ids:
+                                relevant_ids.add(mid)
+        except Exception as e:
+            logger.warning(f"AI module matching failed: {e}")
+
+    # Expand with prerequisites recursively
     def add_prerequisites(module_id: str, visited: set[str]):
         if module_id in visited:
             return
@@ -34,15 +102,12 @@ def find_relevant_modules(gap_skills: list[SkillGap], catalog: list[CourseModule
         if not module:
             return
         for prereq_id in module.prerequisites:
-            if prereq_id not in relevant_ids:
-                relevant_ids.add(prereq_id)
+            relevant_ids.add(prereq_id)
             add_prerequisites(prereq_id, visited)
-    
-    initial_ids = set(relevant_ids)
-    visited: set[str] = set()
-    for mid in initial_ids:
-        add_prerequisites(mid, visited)
-    
+
+    for mid in set(relevant_ids):
+        add_prerequisites(mid, set())
+
     return [module_map[mid] for mid in relevant_ids if mid in module_map]
 
 

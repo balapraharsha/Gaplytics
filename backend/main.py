@@ -261,3 +261,47 @@ async def compare(req: CompareReq):
         candidate_a=a, candidate_b=b, ai_verdict=verdict,
         skill_comparison_table=[{"skill": s, "candidate_a_has": s not in a.top_gaps, "candidate_b_has": s not in b.top_gaps} for s in set(a.top_gaps + b.top_gaps)],
     )
+
+class TailorResumeReq(BaseModel):
+    target_role: str
+    candidate_name: Optional[str] = None
+    gap_skills: list[str] = []
+    known_skills: list[str] = []
+    analysis_context: Optional[dict] = None
+
+@app.post("/api/tailor-resume")
+async def tailor_resume(req: TailorResumeReq):
+    known = ", ".join(req.known_skills[:15]) or "various technical skills"
+    gaps  = ", ".join(req.gap_skills[:8])  or "several areas identified in analysis"
+    name  = req.candidate_name or "Candidate"
+    role  = req.target_role
+
+    system = (
+        "You are a senior technical resume writer. Write a COMPLETE, professional, ATS-optimised resume "
+        "in clean markdown. Include ALL of these sections in order: "
+        "1) # [Name] (just the name as H1), "
+        "2) ## Professional Summary, "
+        "3) ## Core Skills, "
+        "4) ## Skills In Development, "
+        "5) ## Professional Experience (with 2 roles using [Company] placeholder if unknown), "
+        "6) ## Education, "
+        "7) ## Projects & Achievements, "
+        "8) ## Certifications & Learning. "
+        "Rules: Preserve all existing skills. Weave gap skills into 'Skills In Development' with one-line context. "
+        "Use JD keywords naturally throughout. Experience bullets must use strong action verbs. "
+        "Do NOT fabricate specific metrics unless plausible. Do NOT include personal contact info. "
+        "Return ONLY the markdown. No preamble, no code fences, no explanation."
+    )
+    user = (
+        f"Candidate name: {name}\n"
+        f"Target role: {role}\n"
+        f"Current skills (preserve all): {known}\n"
+        f"Gap skills to add in development section: {gaps}\n\n"
+        "Write the complete tailored resume now. Make it 400-600 words, professional, ATS-ready."
+    )
+    try:
+        tailored = call_gemini(system, user, max_tokens=2000)
+        return {"tailored_resume": tailored}
+    except Exception as e:
+        logger.error(f"Resume tailor error: {e}")
+        raise HTTPException(502, f"AI error: {e}")

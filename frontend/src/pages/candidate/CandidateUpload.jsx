@@ -265,34 +265,60 @@ export default function CandidateUpload() {
               </div>
             )}
 
-            {/* Deadline */}
+            {/* Deadline & Study Hours — personalised per context */}
             <div className="autumn-card" style={{ padding: 24 }}>
               <h3 style={{ fontWeight: 600, fontSize: 14, color: '#EDE0D0', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <CalendarIcon /> Deadline &amp; Study Hours
+                <CalendarIcon /> {roleId ? 'Study Hours' : 'Deadline & Study Hours'}
                 <span style={{ fontSize: 10, color: 'rgba(207,157,123,0.38)', fontFamily: 'JetBrains Mono, monospace', marginLeft: 4, fontWeight: 400 }}>optional</span>
               </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <div>
-                  <label style={{ fontSize: 12, color: 'rgba(207,157,123,0.5)', display: 'block', marginBottom: 7, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.3px' }}>
-                    Job-ready by (default: 90 days)
-                  </label>
-                  <input type="date" className="autumn-input" value={deadline} min={minDateStr} onChange={e => setDeadline(e.target.value)} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, color: 'rgba(207,157,123,0.5)', display: 'block', marginBottom: 7, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.3px', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <ClockIcon /> Daily hours
-                  </label>
-                  <input type="number" className="autumn-input" value={dailyHours} min="0.5" max="12" step="0.5" onChange={e => setDailyHours(e.target.value)} />
-                </div>
-              </div>
 
-              {companyDeadline && deadline && deadline !== effectiveDeadline && (
-                <div style={{ marginTop: 14, padding: '10px 14px', background: 'rgba(114,75,57,0.12)', borderRadius: 8, fontSize: 12, color: 'rgba(207,157,123,0.7)', border: '1px solid rgba(114,75,57,0.25)', lineHeight: 1.5 }}>
-                  Company deadline: {companyDeadline} · Your deadline: {deadline} · Using {effectiveDeadline} (earlier)
+              {/* When via HR link — only show daily hours, deadline comes from HR */}
+              {roleId ? (
+                <div>
+                  <div style={{ marginBottom: 14, padding: '10px 14px', background: 'rgba(114,75,57,0.1)', borderRadius: 8, fontSize: 12, color: 'rgba(207,157,123,0.6)', border: '1px solid rgba(114,75,57,0.2)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="6" stroke="rgba(207,157,123,0.4)" strokeWidth="1.1"/><path d="M6.5 4V6.5L8 8" stroke="#CF9D7B" strokeWidth="1.1" strokeLinecap="round"/></svg>
+                    Deadline set by your employer: <strong style={{ color: 'var(--brass)', marginLeft: 4 }}>{companyDeadline || '—'}</strong>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, color: 'rgba(207,157,123,0.5)', display: 'block', marginBottom: 7, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.3px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <ClockIcon /> How many hours can you study per day?
+                    </label>
+                    <input type="number" className="autumn-input" value={dailyHours} min="0.5" max="12" step="0.5"
+                      onChange={e => setDailyHours(e.target.value)}
+                      style={{ maxWidth: 200 }} />
+                    <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(207,157,123,0.35)', fontFamily: 'JetBrains Mono, monospace' }}>
+                      This personalizes your daily roadmap — be honest!
+                    </div>
+                  </div>
                 </div>
+              ) : (
+                /* Standalone mode — show both deadline and hours */
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div>
+                      <label style={{ fontSize: 12, color: 'rgba(207,157,123,0.5)', display: 'block', marginBottom: 7, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.3px' }}>
+                        Job-ready by (default: 90 days)
+                      </label>
+                      <input type="date" className="autumn-input" value={deadline} min={minDateStr} onChange={e => setDeadline(e.target.value)} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 12, color: 'rgba(207,157,123,0.5)', display: 'block', marginBottom: 7, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.3px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <ClockIcon /> Daily hours
+                      </label>
+                      <input type="number" className="autumn-input" value={dailyHours} min="0.5" max="12" step="0.5" onChange={e => setDailyHours(e.target.value)} />
+                    </div>
+                  </div>
+                  {daysLeft !== null && (
+                    <div style={{ marginTop: 14, fontSize: 13, color: 'var(--brass)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="rgba(207,157,123,0.4)" strokeWidth="1.2"/><path d="M7 3.5V7.5L9.5 9" stroke="#CF9D7B" strokeWidth="1.2" strokeLinecap="round"/></svg>
+                      You have <strong style={{ color: '#EDE0D0' }}>&nbsp;{daysLeft} days&nbsp;</strong> to close your gap.
+                    </div>
+                  )}
+                </>
               )}
 
-              {daysLeft !== null && (
+              {/* Days left when via role link */}
+              {roleId && daysLeft !== null && (
                 <div style={{ marginTop: 14, fontSize: 13, color: 'var(--brass)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="rgba(207,157,123,0.4)" strokeWidth="1.2"/><path d="M7 3.5V7.5L9.5 9" stroke="#CF9D7B" strokeWidth="1.2" strokeLinecap="round"/></svg>
                   You have <strong style={{ color: '#EDE0D0' }}>&nbsp;{daysLeft} days&nbsp;</strong> to close your gap.

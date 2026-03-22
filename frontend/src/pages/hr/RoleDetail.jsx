@@ -225,9 +225,18 @@ export default function RoleDetail() {
                         </div>
                       </td>
                       <td style={tdStyle}>
-                        <button className="btn-ghost" style={{ padding: '5px 11px', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.2"/><circle cx="6" cy="6" r="2" fill="currentColor" opacity="0.5"/></svg>
-                          View
+                        <button className="btn-ghost"
+                          onClick={() => {
+                            localStorage.setItem('gaplytics_hr_viewing_candidate', JSON.stringify(c))
+                            localStorage.setItem('gaplytics_hr_viewing_role', JSON.stringify(roleData))
+                            navigate(`/hr/candidate/${c.candidate_id}`)
+                          }}
+                          style={{ padding: '6px 14px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}>
+                          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                            <circle cx="6.5" cy="5" r="2.5" stroke="currentColor" strokeWidth="1.2"/>
+                            <path d="M1.5 11C1.5 8.5 3.8 6.5 6.5 6.5C9.2 6.5 11.5 8.5 11.5 11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                          </svg>
+                          View Progress
                         </button>
                       </td>
                     </motion.tr>

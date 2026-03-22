@@ -51,13 +51,16 @@ export default function ReasoningTrace({ trace = [] }) {
           >
             <div style={{ padding: '18px 22px', maxHeight: 380, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
               {trace.map((step, i) => {
-                const cfg = STEP_CONFIG[step.type] || STEP_CONFIG.decision
+                // Backend returns step_type + action_taken; support legacy type+message too
+                const stepType = step.step_type || step.type || 'decision'
+                const stepMsg  = step.action_taken || step.message || ''
+                const cfg = STEP_CONFIG[stepType] || STEP_CONFIG.decision
                 return (
                   <div key={i} style={{ padding: '10px 14px', borderRadius: 8, background: cfg.bg, border: `1px solid ${cfg.border}`, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                     <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, fontWeight: 600, color: cfg.color, background: `${cfg.color}15`, border: `1px solid ${cfg.color}30`, borderRadius: 4, padding: '2px 6px', letterSpacing: '0.5px', whiteSpace: 'nowrap', marginTop: 1 }}>
                       {cfg.label}
                     </span>
-                    <span style={{ fontSize: 12, color: 'rgba(207,157,123,0.65)', lineHeight: 1.5 }}>{step.message}</span>
+                    <span style={{ fontSize: 12, color: 'rgba(207,157,123,0.65)', lineHeight: 1.5 }}>{stepMsg}</span>
                   </div>
                 )
               })}

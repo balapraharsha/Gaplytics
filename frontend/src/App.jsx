@@ -4,6 +4,7 @@ import Landing from './pages/Landing'
 import HRDashboard from './pages/hr/HRDashboard'
 import RoleDetail from './pages/hr/RoleDetail'
 import CompareView from './pages/hr/CompareView'
+import CandidateProgressView from './pages/hr/CandidateProgressView'
 import CandidateUpload from './pages/candidate/CandidateUpload'
 import Dashboard from './pages/candidate/Dashboard'
 import DeadlineRoadmap from './pages/candidate/DeadlineRoadmap'
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/hr" element={<HRDashboard />} />
         <Route path="/hr/role/:role_id" element={<RoleDetail />} />
         <Route path="/hr/compare" element={<CompareView />} />
+        <Route path="/hr/candidate/:candidate_id" element={<CandidateProgressView />} />
         <Route path="/candidate" element={<CandidateUpload />} />
         <Route path="/candidate/dashboard" element={<Dashboard />} />
         <Route path="/candidate/roadmap" element={<DeadlineRoadmap />} />

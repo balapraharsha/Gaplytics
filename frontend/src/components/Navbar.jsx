@@ -177,7 +177,7 @@ export default function Navbar({ role }) {
           >
             <HelpIcon /> How It Works
           </button>
-          <a href="https://github.com" target="_blank" rel="noopener noreferrer"
+          <a href="https://github.com/balapraharsha/Gaplytics" target="_blank" rel="noopener noreferrer"
             style={{ display: 'flex', alignItems: 'center', opacity: 1, transition: 'opacity 0.2s' }}
             onMouseEnter={e => e.currentTarget.style.opacity = '0.65'}
             onMouseLeave={e => e.currentTarget.style.opacity = '1'}

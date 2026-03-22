@@ -16,6 +16,7 @@ Supported models (fallback chain):
 """
 
 import os
+import re
 import json
 import logging
 import urllib.request
@@ -151,7 +152,7 @@ def call_gemini(system: str, user: str, max_tokens: int = 1024, model: str = Non
     )
 
 
-def call_gemini_json(system: str, user: str, max_tokens: int = 4096, model: str = None) -> any:
+def call_gemini_json(system: str, user: str, max_tokens: int = 6000, model: str = None) -> any:
     """
     Call Bedrock and parse response as JSON.
     Uses max_tokens=4096 by default to prevent JSON truncation.
@@ -199,21 +200,64 @@ def call_gemini_json(system: str, user: str, max_tokens: int = 4096, model: str 
 
 def _repair_json(raw: str) -> str:
     """
-    Attempt to close truncated JSON by counting open brackets.
-    Handles the most common truncation case: response cut mid-object.
+    Robust JSON repair — handles truncation mid-string, mid-value, or mid-object.
+    Strategy: strip the broken tail and close all open structures cleanly.
     """
-    raw = raw.strip().rstrip(",").rstrip()
+    raw = raw.strip()
 
-    # Close any open string
-    if raw.count('"') % 2 != 0:
-        raw += '"'
+    # Remove trailing comma before closing
+    raw = re.sub(r",\s*$", "", raw)
 
-    # Close open objects and arrays
-    open_braces   = raw.count("{") - raw.count("}")
-    open_brackets = raw.count("[") - raw.count("]")
+    # If truncated mid-string: find the last complete key-value pair
+    # by walking back from the end to find a safe truncation point
+    # Try to find the last complete JSON object boundary
+    stack = []
+    in_string = False
+    escape_next = False
+    last_safe = 0
 
-    raw += "}" * max(0, open_braces)
-    raw += "]" * max(0, open_brackets)
+    for i, ch in enumerate(raw):
+        if escape_next:
+            escape_next = False
+            continue
+        if ch == "\\" and in_string:
+            escape_next = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if ch in ("{", "["):
+            stack.append(ch)
+        elif ch in ("}", "]"):
+            if stack:
+                stack.pop()
+                last_safe = i + 1
+
+    # If we're mid-string or have unclosed structures, truncate to last safe point
+    if in_string or stack:
+        # Walk back to last complete comma-separated entry or opening bracket
+        truncated = raw[:last_safe].rstrip().rstrip(",").rstrip()
+        if not truncated:
+            truncated = raw
+
+        # Now close all open structures
+        close_map = {"{": "}", "[": "]"}
+        # Recount on truncated
+        stack2 = []
+        in_str2 = False
+        esc2 = False
+        for ch in truncated:
+            if esc2: esc2 = False; continue
+            if ch == "\\" and in_str2: esc2 = True; continue
+            if ch == '"': in_str2 = not in_str2; continue
+            if in_str2: continue
+            if ch in ("{", "["): stack2.append(ch)
+            elif ch in ("}", "]") and stack2: stack2.pop()
+
+        closing = "".join(close_map[c] for c in reversed(stack2))
+        return truncated + closing
 
     return raw
 
