@@ -286,5 +286,5 @@ Four original algorithms run in sequence:
 ---
 
 <div align="center">
-Built for the Gaplytics Hackathon &nbsp;·&nbsp; Powered by AWS Bedrock (Claude 3 Haiku by Anthropic)
+Built for the Gaplytics &nbsp;·&nbsp; Powered by AWS Bedrock (Claude 3 Haiku by Anthropic)
 </div>
